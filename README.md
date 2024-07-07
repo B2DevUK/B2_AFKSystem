@@ -24,9 +24,9 @@ This script manages AFK (Away From Keyboard) players in a FiveM server. It inclu
 3. **Add the script to your server configuration**:
    - Open your `server.cfg` file and add the following line:
      ```
-     ensure your_folder_name
+     ensure b2_afkSystem
      ```
-     Replace `your_folder_name` with the name of the folder you placed in the `resources` directory.
+     Replace `b2_afkSystem` with the name of the folder you placed in the `resources` directory.
 
 4. **Start your server**:
    - Restart your FiveM server or start it if it was not running.
