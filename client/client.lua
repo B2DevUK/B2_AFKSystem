@@ -9,9 +9,8 @@ function DrawText3D(x, y, z, text)
 
     SetTextScale(0.35, 0.35)
     SetTextFont(4)
-    SetTextProportional(1)
     SetTextEntry("STRING")
-    SetTextCentre(1)
+    SetTextCentre(true)
     AddTextComponentString(text)
     DrawText(_x, _y)
     local factor = (string.len(text)) / 370
