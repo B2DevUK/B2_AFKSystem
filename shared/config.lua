@@ -1,5 +1,3 @@
--- Configuration file for AFK System
-
 Config = {}
 
 -- Enable/disable AFK system
