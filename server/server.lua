@@ -17,9 +17,9 @@ AddEventHandler('b2_afkSystem:playerAFK', function()
     end
 end)
 
-RegisterServerEvent('b2_afksystem:playerReturn')
+RegisterServerEvent('b2_afkSystem:playerReturn')
 AddEventHandler('b2_afkSystem:playerReturn', function()
     local src = source
     afkPlayers[src] = nil
-    TriggerClientEvent('afk:removeAFKState', -1, src)
+    TriggerClientEvent('b2_afkSystem:removeAFKState', -1, src)
 end)

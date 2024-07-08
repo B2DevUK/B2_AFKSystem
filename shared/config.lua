@@ -4,7 +4,7 @@ Config = {}
 Config.AFKSystemEnabled = true
 
 -- Idle time in seconds before a player is considered AFK
-Config.IdleTimeThreshold = 300 -- 5 minutes
+Config.IdleTimeThreshold = 10 -- 5 minutes
 
 -- Time in seconds before an AFK player is kicked
 Config.KickTime = 600 -- 10 minutes

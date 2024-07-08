@@ -22,7 +22,6 @@ Citizen.CreateThread(function()
         Citizen.Wait(1000)
 
         if Config.AFKSystemEnabled then
-            local playerPed = PlayerPedId()
             local currentTime = GetGameTimer()
             
             -- Check for player activity
@@ -30,14 +29,20 @@ Citizen.CreateThread(function()
                 lastActivityTime = currentTime
                 if isAFK then
                     isAFK = false
+                    local playerPed = PlayerPedId()
+                    SetEntityInvincible(playerPed, false)
                     TriggerServerEvent('b2_afkSystem:playerReturn')
+                    print("Player returned from AFK")
                 end
             end
 
             -- Check if player is AFK
             if not isAFK and (currentTime - lastActivityTime) > (Config.IdleTimeThreshold * 1000) then
                 isAFK = true
+                local playerPed = PlayerPedId()
+                SetEntityInvincible(playerPed, true)
                 TriggerServerEvent('b2_afkSystem:playerAFK')
+                print("Player is AFK")
             end
         end
     end
@@ -46,11 +51,13 @@ end)
 RegisterNetEvent('b2_afkSystem:applyAFKState')
 AddEventHandler('b2_afkSystem:applyAFKState', function(playerId)
     afkPlayers[playerId] = true
+    print("Player " .. playerId .. " is marked as AFK")
 end)
 
 RegisterNetEvent('b2_afkSystem:removeAFKState')
 AddEventHandler('b2_afkSystem:removeAFKState', function(playerId)
     afkPlayers[playerId] = nil
+    print("Player " .. playerId .. " is removed from AFK state")
 end)
 
 Citizen.CreateThread(function()
@@ -58,8 +65,10 @@ Citizen.CreateThread(function()
         Citizen.Wait(0)
         for playerId, _ in pairs(afkPlayers) do
             local playerPed = GetPlayerPed(GetPlayerFromServerId(playerId))
-            local coords = GetEntityCoords(playerPed)
-            DrawText3D(coords.x, coords.y, coords.z + 1.0, "AFK")
+            if playerPed then
+                local coords = GetEntityCoords(playerPed)
+                DrawText3D(coords.x, coords.y, coords.z + 1.0, "AFK")
+            end
         end
     end
 end)
