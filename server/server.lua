@@ -23,3 +23,15 @@ AddEventHandler('b2_afkSystem:playerReturn', function()
     afkPlayers[src] = nil
     TriggerClientEvent('b2_afkSystem:removeAFKState', -1, src)
 end)
+
+RegisterServerEvent('b2_afkSystem:checkPlayerGroup')
+AddEventHandler('b2_afkSystem:checkPlayerGroup', function()
+    local src = source
+    for _, group in ipairs(Config.IgnoredGroups) do
+        if IsPlayerAceAllowed(src, "group." .. group) then
+            TriggerClientEvent('b2_afkSystem:setPlayerGroup', src, group)
+            return
+        end
+    end
+    TriggerClientEvent('b2_afkSystem:setPlayerGroup', src, "user")
+end)

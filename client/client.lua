@@ -1,6 +1,7 @@
 local lastActivityTime = GetGameTimer()
 local isAFK = false
 local afkPlayers = {}
+local playerGroup = nil
 
 -- Function to draw 3D text
 function DrawText3D(x, y, z, text)
@@ -29,8 +30,10 @@ Citizen.CreateThread(function()
                 lastActivityTime = currentTime
                 if isAFK then
                     isAFK = false
-                    local playerPed = PlayerPedId()
-                    SetEntityInvincible(playerPed, false)
+                    if Config.InvincibilityEnabled then
+                        local playerPed = PlayerPedId()
+                        SetEntityInvincible(playerPed, false)
+                    end
                     TriggerServerEvent('b2_afkSystem:playerReturn')
                     print("Player returned from AFK")
                 end
@@ -38,15 +41,33 @@ Citizen.CreateThread(function()
 
             -- Check if player is AFK
             if not isAFK and (currentTime - lastActivityTime) > (Config.IdleTimeThreshold * 1000) then
-                isAFK = true
-                local playerPed = PlayerPedId()
-                SetEntityInvincible(playerPed, true)
-                TriggerServerEvent('b2_afkSystem:playerAFK')
-                print("Player is AFK")
+                if not playerGroup then
+                    TriggerServerEvent('b2_afkSystem:checkPlayerGroup')
+                end
+                if not IsPlayerInIgnoredGroup() then
+                    isAFK = true
+                    if Config.InvincibilityEnabled then
+                        local playerPed = PlayerPedId()
+                        SetEntityInvincible(playerPed, true)
+                    end
+                    TriggerServerEvent('b2_afkSystem:playerAFK')
+                    print("Player is AFK")
+                end
             end
         end
     end
 end)
+
+function IsPlayerInIgnoredGroup()
+    if playerGroup then
+        for _, group in ipairs(Config.IgnoredGroups) do
+            if playerGroup == group then
+                return true
+            end
+        end
+    end
+    return false
+end
 
 RegisterNetEvent('b2_afkSystem:applyAFKState')
 AddEventHandler('b2_afkSystem:applyAFKState', function(playerId)
@@ -60,14 +81,21 @@ AddEventHandler('b2_afkSystem:removeAFKState', function(playerId)
     print("Player " .. playerId .. " is removed from AFK state")
 end)
 
+RegisterNetEvent('b2_afkSystem:setPlayerGroup')
+AddEventHandler('b2_afkSystem:setPlayerGroup', function(group)
+    playerGroup = group
+end)
+
 Citizen.CreateThread(function()
     while true do
         Citizen.Wait(0)
-        for playerId, _ in pairs(afkPlayers) do
-            local playerPed = GetPlayerPed(GetPlayerFromServerId(playerId))
-            if playerPed then
-                local coords = GetEntityCoords(playerPed)
-                DrawText3D(coords.x, coords.y, coords.z + 1.0, "AFK")
+        if Config.AFKIconEnabled then
+            for playerId, _ in pairs(afkPlayers) do
+                local playerPed = GetPlayerPed(GetPlayerFromServerId(playerId))
+                if playerPed then
+                    local coords = GetEntityCoords(playerPed)
+                    DrawText3D(coords.x, coords.y, coords.z + 1.0, "AFK")
+                end
             end
         end
     end
