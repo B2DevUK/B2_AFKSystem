@@ -4,10 +4,10 @@ Config = {}
 Config.AFKSystemEnabled = true
 
 -- Idle time in seconds before a player is considered AFK
-Config.IdleTimeThreshold = 10
+Config.IdleTimeThreshold = 30
 
 -- Time in seconds before an AFK player is kicked
-Config.KickTime = 30
+Config.KickTime = 1800
 
 -- Enable/disable invincibility for AFK players
 Config.InvincibilityEnabled = true
