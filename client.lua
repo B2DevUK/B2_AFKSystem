@@ -2,6 +2,7 @@ local lastActivityTime = GetGameTimer()
 local isAFK = false
 local afkPlayers = {}
 local isIgnoredGroup = false
+local localPlayerAFK = false
 
 -- Function to draw 3D text
 function DrawText3D(x, y, z, text)
@@ -29,12 +30,13 @@ end
 
 Citizen.CreateThread(function()
     CheckPlayerGroup()
+    TriggerServerEvent('b2_afkSystem:requestAFKList')
     local lastCamRot = vector3(0, 0, 0)
     
     while true do
         Citizen.Wait(1000)
 
-        if Config.AFKSystemEnabled then
+        if Config.AFKSystemEnabled and isIgnoredGroup ~= nil then
             local currentTime = GetGameTimer()
             local currentCamRot = GetGameplayCamRot(2)
             
@@ -48,7 +50,8 @@ Citizen.CreateThread(function()
                 
                 if isAFK then
                     isAFK = false
-                    if Config.InvincibilityEnabled and not isIgnoredGroup then
+                    localPlayerAFK = false
+                    if Config.InvincibilityEnabled then
                         SetEntityInvincible(PlayerPedId(), false)
                     end
                     TriggerServerEvent('b2_afkSystem:playerReturn')
@@ -57,7 +60,8 @@ Citizen.CreateThread(function()
 
             if not isAFK and (currentTime - lastActivityTime) > (Config.IdleTimeThreshold * 1000) then
                 isAFK = true
-                if Config.InvincibilityEnabled and not isIgnoredGroup then
+                localPlayerAFK = true
+                if Config.InvincibilityEnabled then
                     SetEntityInvincible(PlayerPedId(), true)
                 end
                 TriggerServerEvent('b2_afkSystem:playerAFK')
@@ -72,13 +76,13 @@ AddEventHandler('b2_afkSystem:setPlayerGroup', function(ignored)
 end)
 
 Citizen.CreateThread(function()
-    TriggerServerEvent('b2_afkSystem:requestAFKList')
     while true do
         Citizen.Wait(0)
         if Config.AFKIconEnabled then
             local playerPed = PlayerPedId()
             local playerCoords = GetEntityCoords(playerPed)
 
+            -- Render AFK text for other players
             for playerId, afkData in pairs(afkPlayers) do
                 if afkData.time then  -- Check if the player is actually AFK
                     local targetPed = GetPlayerPed(GetPlayerFromServerId(playerId))
@@ -91,6 +95,11 @@ Citizen.CreateThread(function()
                         end
                     end
                 end
+            end
+
+            -- Render AFK text for local player
+            if localPlayerAFK then
+                DrawText3D(playerCoords.x, playerCoords.y, playerCoords.z + 1.0, "AFK")
             end
         end
     end
