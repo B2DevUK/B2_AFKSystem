@@ -3,7 +3,7 @@ game 'gta5'
 
 author 'B2DevUK'
 description 'A simple AFK System Script'
-version '1.0.1'
+version '1.0.2'
 
 client_scripts {
     'client.lua'

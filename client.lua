@@ -18,21 +18,34 @@ function DrawText3D(x, y, z, text)
     DrawRect(_x, _y + 0.0125, 0.015 + factor, 0, 0, 0, 75)
 end
 
+RegisterNetEvent('b2_afkSystem:updateAFKList')
+AddEventHandler('b2_afkSystem:updateAFKList', function(serverAFKList)
+    afkPlayers = serverAFKList
+end)
+
 function CheckPlayerGroup()
     TriggerServerEvent('b2_afkSystem:checkPlayerGroup')
 end
 
 Citizen.CreateThread(function()
     CheckPlayerGroup()
+    local lastCamRot = vector3(0, 0, 0)
     
     while true do
         Citizen.Wait(1000)
 
         if Config.AFKSystemEnabled then
             local currentTime = GetGameTimer()
+            local currentCamRot = GetGameplayCamRot(2)
             
-            if IsControlPressed(0, 32) or IsControlPressed(0, 33) or IsControlPressed(0, 34) or IsControlPressed(0, 35) or IsPedWalking(PlayerPedId()) or IsPedRunning(PlayerPedId()) or IsPedSprinting(PlayerPedId()) then
+            if IsControlPressed(0, 32) or IsControlPressed(0, 33) or 
+               IsControlPressed(0, 34) or IsControlPressed(0, 35) or 
+               IsPedWalking(PlayerPedId()) or IsPedRunning(PlayerPedId()) or 
+               IsPedSprinting(PlayerPedId()) or currentCamRot ~= lastCamRot then
+                
                 lastActivityTime = currentTime
+                lastCamRot = currentCamRot
+                
                 if isAFK then
                     isAFK = false
                     if Config.InvincibilityEnabled and not isIgnoredGroup then
@@ -53,36 +66,30 @@ Citizen.CreateThread(function()
     end
 end)
 
-function IsPlayerInIgnoredGroup()
-    return playerGroup == "ignored"
-end
-
-RegisterNetEvent('b2_afkSystem:applyAFKState')
-AddEventHandler('b2_afkSystem:applyAFKState', function(playerId)
-    afkPlayers[playerId] = true
-    print("Player " .. playerId .. " is marked as AFK")
-end)
-
-RegisterNetEvent('b2_afkSystem:removeAFKState')
-AddEventHandler('b2_afkSystem:removeAFKState', function(playerId)
-    afkPlayers[playerId] = nil
-    print("Player " .. playerId .. " is removed from AFK state")
-end)
-
 RegisterNetEvent('b2_afkSystem:setPlayerGroup')
 AddEventHandler('b2_afkSystem:setPlayerGroup', function(ignored)
     isIgnoredGroup = ignored
 end)
 
 Citizen.CreateThread(function()
+    TriggerServerEvent('b2_afkSystem:requestAFKList')
     while true do
         Citizen.Wait(0)
         if Config.AFKIconEnabled then
-            for playerId, _ in pairs(afkPlayers) do
-                local playerPed = GetPlayerPed(GetPlayerFromServerId(playerId))
-                if playerPed then
-                    local coords = GetEntityCoords(playerPed)
-                    DrawText3D(coords.x, coords.y, coords.z + 1.0, "AFK")
+            local playerPed = PlayerPedId()
+            local playerCoords = GetEntityCoords(playerPed)
+
+            for playerId, afkData in pairs(afkPlayers) do
+                if afkData.time then  -- Check if the player is actually AFK
+                    local targetPed = GetPlayerPed(GetPlayerFromServerId(playerId))
+                    if targetPed and targetPed ~= playerPed then
+                        local targetCoords = GetEntityCoords(targetPed)
+                        local distance = #(playerCoords - targetCoords)
+
+                        if distance <= 5.0 then
+                            DrawText3D(targetCoords.x, targetCoords.y, targetCoords.z + 1.0, "AFK")
+                        end
+                    end
                 end
             end
         end
